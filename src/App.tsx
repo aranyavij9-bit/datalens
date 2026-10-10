@@ -1,6 +1,7 @@
 import { AppProvider } from '@/context/AppContext';
 import { useRouter } from '@/context/router';
 import { Layout } from '@/components/Layout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { HomePage } from '@/pages/HomePage';
 import { WorkspacePage } from '@/pages/WorkspacePage';
 import { DataPage } from '@/pages/DataPage';
@@ -18,6 +19,7 @@ function AppContent() {
 
   return (
     <Layout page={page} navigate={navigate}>
+      <ErrorBoundary resetKey={page}>
       {page === 'home' && <HomePage navigate={navigate} />}
       {page === 'workspace' && <WorkspacePage navigate={navigate} />}
       {page === 'data' && <DataPage />}
@@ -29,6 +31,7 @@ function AppContent() {
       {page === 'reports' && <ReportsPage />}
       {page === 'student' && <StudentPage />}
       {page === 'about' && <AboutPage />}
+      </ErrorBoundary>
     </Layout>
   );
 }

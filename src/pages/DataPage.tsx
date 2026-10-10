@@ -1,20 +1,15 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
-  Database, Upload, Search, ChevronLeft, ChevronRight,
-  ArrowUpDown, Eye, EyeOff, Filter as FilterIcon, X,
-  Trash2, Type, Hash, Calendar, CheckCircle2, AlertTriangle,
-  Wand2, RefreshCw, Edit3,
+  Database, Upload, Search, ChevronLeft, ChevronRight, ArrowUpDown, Eye, EyeOff, Filter as FilterIcon, X, Trash2, Type, Hash, Calendar, CheckCircle2, AlertTriangle, Wand2, RefreshCw, Edit3,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useColors } from '@/context/useColors';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Card, Badge, EmptyState, StatCard, ProgressBar, Select } from '@/components/ui';
-import { parseCSV, buildDataset, toCSV, toJSON, downloadFile } from '@/lib/csv';
+import { parseCSV, toCSV, toJSON, downloadFile } from '@/lib/csv';
 import { createDemoDatasets, DEMO_DATASET_NAMES } from '@/lib/demoData';
 import {
-  computeNumericStats, computeCategoricalStats, computeDateStats,
-  getNumericValues, formatNumber, getNumericColumnNames, getCategoricalColumnNames,
-  parseNumeric,
+  computeNumericStats, computeCategoricalStats, computeDateStats, getNumericValues, formatNumber, parseNumeric,
 } from '@/lib/stats';
 import type { Dataset, ColumnType, ColumnMeta, Filter } from '@/lib/types';
 
@@ -41,15 +36,15 @@ export function DataPage() {
       />
 
       {/* Tab bar */}
-      <div className="flex gap-1 mb-6 surface rounded-xl p-1 overflow-x-auto">
+      <div className="flex gap-1 mb-6 surface rounded-full p-1 overflow-x-auto w-fit max-w-full">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+            className="px-4 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap"
             style={{
               backgroundColor: tab === t.id ? colors.primary : 'transparent',
-              color: tab === t.id ? colors.surface : colors.textMuted,
+              color: tab === t.id ? '#ffffff' : colors.textMuted,
             }}
           >
             {t.label}
@@ -96,6 +91,9 @@ function ImportTab({ colors, onImport, onLoadDemo }: {
 
   const handleFile = (file: File) => {
     setError('');
+    setImportedInfo(null);
+    // Allow choosing the same file again later
+    if (fileRef.current) fileRef.current.value = '';
     if (file.size > 5 * 1024 * 1024) {
       setError('File is larger than 5MB. Please use a smaller file for browser-based processing.');
       return;
@@ -141,14 +139,14 @@ function ImportTab({ colors, onImport, onLoadDemo }: {
         </div>
 
         {error && (
-          <div className="mt-4 flex items-start gap-2 p-3 rounded-lg" style={{ backgroundColor: '#fef2f2', color: '#991b1b' }}>
+          <div className="mt-4 flex items-start gap-2 p-3 rounded-xl" style={{ backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>
             <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
             <p className="text-sm">{error}</p>
           </div>
         )}
 
         {importedInfo && (
-          <div className="mt-4 flex items-start gap-2 p-3 rounded-lg" style={{ backgroundColor: '#f0fdf4', color: '#166534' }}>
+          <div className="mt-4 flex items-start gap-2 p-3 rounded-xl" style={{ backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)' }}>
             <CheckCircle2 size={18} className="flex-shrink-0 mt-0.5" />
             <p className="text-sm">Imported "{importedInfo.name}" — {importedInfo.rows} rows, {importedInfo.cols} columns.</p>
           </div>
@@ -166,7 +164,7 @@ function ImportTab({ colors, onImport, onLoadDemo }: {
               <button
                 key={name}
                 onClick={() => onLoadDemo(name)}
-                className="surface-2 rounded-lg p-4 text-left hover:opacity-90 transition-opacity"
+                className="surface-2 rounded-xl p-4 text-left hover:opacity-90 transition-opacity"
                 style={{ border: `1px solid ${colors.border}` }}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -315,7 +313,7 @@ function ExploreTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType<
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             placeholder="Search all columns..."
-            className="input-base rounded-lg pl-9 pr-3 py-2 text-sm w-full"
+            className="input-base rounded-xl pl-9 pr-3 py-2 text-sm w-full"
           />
         </div>
         <Button size="sm" onClick={() => setShowFilters(!showFilters)}>
@@ -323,10 +321,10 @@ function ExploreTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType<
         </Button>
         <div className="relative">
           <details className="relative">
-            <summary className="cursor-pointer list-none inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm surface" style={{ color: colors.text }}>
+            <summary className="cursor-pointer list-none inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm surface" style={{ color: colors.text }}>
               <Eye size={15} /> Columns
             </summary>
-            <div className="absolute right-0 top-full mt-1 surface rounded-lg p-2 z-10 min-w-[200px] max-h-64 overflow-y-auto shadow-lg">
+            <div className="absolute right-0 top-full mt-1 surface rounded-xl p-2 z-10 min-w-[200px] max-h-64 overflow-y-auto shadow-lg">
               {dataset.columns.map((c) => (
                 <button
                   key={c.name}
@@ -359,11 +357,11 @@ function ExploreTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType<
               <>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wide">Min</label>
-                  <input type="number" value={filterMin} onChange={(e) => setFilterMin(e.target.value)} placeholder="Min" className="input-base rounded-lg px-3 py-2 text-sm w-24" />
+                  <input type="number" value={filterMin} onChange={(e) => setFilterMin(e.target.value)} placeholder="Min" className="input-base rounded-xl px-3 py-2 text-sm w-24" />
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wide">Max</label>
-                  <input type="number" value={filterMax} onChange={(e) => setFilterMax(e.target.value)} placeholder="Max" className="input-base rounded-lg px-3 py-2 text-sm w-24" />
+                  <input type="number" value={filterMax} onChange={(e) => setFilterMax(e.target.value)} placeholder="Max" className="input-base rounded-xl px-3 py-2 text-sm w-24" />
                 </div>
                 <Button size="sm" variant="primary" onClick={addNumericFilter}>Add Filter</Button>
               </>
@@ -372,7 +370,7 @@ function ExploreTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType<
               <>
                 <div className="flex flex-col gap-1 flex-1 min-w-[150px]">
                   <label className="text-xs font-medium text-muted uppercase tracking-wide">Contains text</label>
-                  <input value={filterText} onChange={(e) => setFilterText(e.target.value)} placeholder="Filter by text..." className="input-base rounded-lg px-3 py-2 text-sm" />
+                  <input value={filterText} onChange={(e) => setFilterText(e.target.value)} placeholder="Filter by text..." className="input-base rounded-xl px-3 py-2 text-sm" />
                 </div>
                 <Button size="sm" variant="primary" onClick={addTextFilter}>Add Filter</Button>
               </>
@@ -426,8 +424,8 @@ function ExploreTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType<
             Page {page + 1} of {Math.max(1, totalPages)} · {filteredRows.length} rows
           </span>
           <div className="flex gap-1">
-            <button disabled={page === 0} onClick={() => setPage(page - 1)} className="p-1.5 rounded-lg surface disabled:opacity-30"><ChevronLeft size={16} /></button>
-            <button disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)} className="p-1.5 rounded-lg surface disabled:opacity-30"><ChevronRight size={16} /></button>
+            <button disabled={page === 0} onClick={() => setPage(page - 1)} className="p-1.5 rounded-xl surface disabled:opacity-30"><ChevronLeft size={16} /></button>
+            <button disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)} className="p-1.5 rounded-xl surface disabled:opacity-30"><ChevronRight size={16} /></button>
           </div>
         </div>
       </div>
@@ -475,8 +473,8 @@ function ProfileTab({ dataset, colors, onUpdateType }: {
           {dataset.columns.map((c) => (
             <div key={c.name} className="flex items-center gap-3">
               <span className="text-sm w-32 truncate" style={{ color: colors.text }}>{c.name}</span>
-              <div className="flex-1"><ProgressBar value={c.missing} max={maxMissing} color={c.missing > 0 ? '#f59e0b' : colors.primary} /></div>
-              <span className="text-sm w-12 text-right" style={{ color: c.missing > 0 ? '#f59e0b' : colors.textMuted }}>{c.missing}</span>
+              <div className="flex-1"><ProgressBar value={c.missing} max={maxMissing} color={c.missing > 0 ? 'var(--color-amber)' : colors.primary} /></div>
+              <span className="text-sm w-12 text-right" style={{ color: c.missing > 0 ? 'var(--color-amber)' : colors.textMuted }}>{c.missing}</span>
             </div>
           ))}
         </div>
@@ -489,10 +487,10 @@ function ProfileTab({ dataset, colors, onUpdateType }: {
             <button
               key={c.name}
               onClick={() => setSelectedCol(c.name)}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+              className="px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
               style={{
                 backgroundColor: selectedCol === c.name ? colors.primary : colors.surface2,
-                color: selectedCol === c.name ? colors.surface : colors.text,
+                color: selectedCol === c.name ? '#ffffff' : colors.text,
               }}
             >
               {c.name}
@@ -581,6 +579,17 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
   const [changingType, setChangingType] = useState<{ col: string; type: ColumnType } | null>(null);
   const [fillingMissing, setFillingMissing] = useState<{ col: string; value: string } | null>(null);
   const [status, setStatus] = useState('');
+  const previewRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const editorOpen = Boolean(renaming || removingCol || changingType || fillingMissing);
+
+  // Editors and previews render away from the button that opened them; bring them into view
+  useEffect(() => {
+    if (editorOpen) editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [editorOpen, renaming?.old, removingCol, changingType?.col, fillingMissing?.col]);
+  useEffect(() => {
+    if (preview) previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [preview]);
 
   const applyChange = (action: string, before: number, after: number, fn: () => void) => {
     setPreview({ action, before, after, applyFn: fn });
@@ -606,16 +615,16 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
   };
 
   const actionFillMissingNumeric = (col: string, value: string) => {
+    // Keep the fill value numeric; formatted strings like "1,234.5" would become NaN
     const fillVal = value === 'mean'
-      ? formatNumber(computeNumericStats(getNumericValues(dataset.rows, col)).mean)
-      : value;
+      ? Math.round(computeNumericStats(getNumericValues(dataset.rows, col)).mean * 100) / 100
+      : Number(value);
     const updated = dataset.rows.map((r) => {
       if (r[col] === null || r[col] === '' || r[col] === undefined) {
-        return { ...r, [col]: Number(fillVal) };
+        return { ...r, [col]: fillVal };
       }
       return r;
     });
-    const filled = dataset.rows.filter((r) => r[col] === null || r[col] === '' || r[col] === undefined).length;
     applyChange(`Fill missing in "${col}"`, dataset.rows.length, dataset.rows.length, () => onApply({ ...dataset, rows: updated }));
     setFillingMissing(null);
   };
@@ -642,7 +651,8 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
 
   const actionRemoveCol = (col: string) => {
     const updated = dataset.rows.map((r) => {
-      const { [col]: _, ...rest } = r;
+      const rest = { ...r };
+      delete rest[col];
       return rest;
     });
     applyChange(`Remove column "${col}"`, dataset.rows.length, dataset.rows.length, () => onApply({
@@ -700,7 +710,7 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
   return (
     <div className="space-y-4">
       {status && (
-        <div className="flex items-center gap-2 p-3 rounded-lg" style={{ backgroundColor: '#f0fdf4', color: '#166534' }}>
+        <div className="flex items-center gap-2 p-3 rounded-xl" style={{ backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)' }}>
           <CheckCircle2 size={18} />
           <p className="text-sm">{status}</p>
         </div>
@@ -708,6 +718,7 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
 
       {/* Preview dialog */}
       {preview && (
+        <div ref={previewRef}>
         <Card className="animate-fade-in" title="Preview Change">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -722,10 +733,11 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
             <Button onClick={() => setPreview(null)}>Cancel</Button>
           </div>
         </Card>
+        </div>
       )}
 
       {/* Working copy note */}
-      <div className="flex items-center justify-between p-3 rounded-lg surface-2">
+      <div className="flex items-center justify-between p-3 rounded-xl surface-2">
         <div className="flex items-center gap-2">
           <Wand2 size={16} style={{ color: colors.primary }} />
           <p className="text-sm" style={{ color: colors.text }}>Working copy — changes are previewed before applying</p>
@@ -742,7 +754,7 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
           {cleaningActions.map((a) => {
             const Icon = a.icon;
             return (
-              <button key={a.label} onClick={a.onClick} className="surface-2 rounded-lg p-3 text-left hover:opacity-90 transition-opacity">
+              <button key={a.label} onClick={a.onClick} className="surface-2 rounded-xl p-3 text-left hover:opacity-90 transition-opacity">
                 <div className="flex items-center gap-2 mb-1">
                   <Icon size={16} style={{ color: colors.primary }} />
                   <span className="font-medium text-sm" style={{ color: colors.text }}>{a.label}</span>
@@ -758,7 +770,7 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
       <Card title="Column Actions" subtitle="Transform individual columns">
         <div className="space-y-2">
           {dataset.columns.map((col) => (
-            <div key={col.name} className="flex items-center justify-between p-3 rounded-lg surface-2">
+            <div key={col.name} className="flex items-center justify-between p-3 rounded-xl surface-2">
               <div className="flex items-center gap-2">
                 <TypeIcon type={col.type} />
                 <span className="font-medium text-sm" style={{ color: colors.text }}>{col.name}</span>
@@ -793,12 +805,13 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
       </Card>
 
       {/* Inline editors */}
+      <div ref={editorRef} className="space-y-4">
       {renaming && (
         <Card title={`Rename "${renaming.old}"`}>
           <div className="flex gap-2 items-end">
             <div className="flex-1">
               <label className="text-xs font-medium text-muted uppercase tracking-wide">New name</label>
-              <input value={renaming.new} onChange={(e) => setRenaming({ ...renaming, new: e.target.value })} className="input-base rounded-lg px-3 py-2 text-sm w-full mt-1" autoFocus />
+              <input value={renaming.new} onChange={(e) => setRenaming({ ...renaming, new: e.target.value })} className="input-base rounded-xl px-3 py-2 text-sm w-full mt-1" autoFocus />
             </div>
             <Button variant="primary" onClick={() => actionRenameCol(renaming.old, renaming.new)}>Rename</Button>
             <Button onClick={() => setRenaming(null)}>Cancel</Button>
@@ -841,7 +854,7 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
               <>
                 <div className="flex-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wide">Fill with</label>
-                  <input value={fillingMissing.value} onChange={(e) => setFillingMissing({ ...fillingMissing, value: e.target.value })} placeholder="e.g. Unknown" className="input-base rounded-lg px-3 py-2 text-sm w-full mt-1" autoFocus />
+                  <input value={fillingMissing.value} onChange={(e) => setFillingMissing({ ...fillingMissing, value: e.target.value })} placeholder="e.g. Unknown" className="input-base rounded-xl px-3 py-2 text-sm w-full mt-1" autoFocus />
                 </div>
                 <Button variant="primary" onClick={() => actionFillMissingCategorical(fillingMissing.col, fillingMissing.value || 'Unknown')}>Fill</Button>
               </>
@@ -850,6 +863,8 @@ function CleaningTab({ dataset, colors, onApply, onCommit, onReset }: {
           </div>
         </Card>
       )}
+
+      </div>
 
       {/* Export */}
       <Card title="Export Data">

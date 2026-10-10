@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lightbulb, Plus, Trash2, FileText, Download, StickyNote } from 'lucide-react';
+import { Lightbulb, Plus, Trash2, Download, StickyNote } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useColors } from '@/context/useColors';
 import { PageHeader } from '@/components/PageHeader';
@@ -52,7 +52,7 @@ export function InsightsPage() {
               value={newInsight}
               onChange={(e) => setNewInsight(e.target.value)}
               placeholder="Write your finding... e.g. 'Study hours and exam scores show a strong positive relationship.'"
-              className="input-base rounded-lg px-3 py-2 text-sm w-full min-h-[80px] resize-y"
+              className="input-base rounded-xl px-3 py-2 text-sm w-full min-h-[80px] resize-y"
               autoFocus
             />
             <div className="flex gap-2">

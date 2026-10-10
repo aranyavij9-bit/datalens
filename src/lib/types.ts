@@ -99,5 +99,7 @@ export interface ThemeColors {
   text: string;
   textMuted: string;
   primary: string;
+  /** Secondary highlight, used for warnings and outliers */
+  accent: string;
   chartColors: string[];
 }

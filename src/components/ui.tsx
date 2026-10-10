@@ -6,17 +6,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
-export function Button({ variant = 'secondary', size = 'md', children, className = '', ...props }: ButtonProps) {
-  const base = 'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed';
-  const sizes = { sm: 'px-3 py-1.5 text-sm', md: 'px-4 py-2 text-sm' };
+export function Button({ variant = 'secondary', size = 'md', children, className = '', type = 'button', ...props }: ButtonProps) {
+  const base = 'inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed';
+  const sizes = { sm: 'h-8 px-3.5 text-sm', md: 'h-10 px-4 text-sm' };
   const variants = {
     primary: 'btn-primary',
     secondary: 'surface text-[var(--color-text)] hover:surface-2',
     ghost: 'text-muted hover:text-[var(--color-text)]',
-    danger: 'bg-red-600 text-white hover:bg-red-700',
+    danger: 'bg-[var(--color-danger)] text-white hover:opacity-90',
   };
   return (
-    <button className={`${base} ${sizes[size]} ${variants[variant]} ${className}`} {...props}>
+    <button type={type} className={`${base} ${sizes[size]} ${variants[variant]} ${className}`} {...props}>
       {children}
     </button>
   );
@@ -32,17 +32,17 @@ interface CardProps {
 
 export function Card({ children, className = '', title, subtitle, action }: CardProps) {
   return (
-    <div className={`surface rounded-xl ${className}`}>
+    <div className={`surface rounded-3xl ${className}`}>
       {(title || action) && (
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
+        <div className="flex items-center justify-between gap-3 px-6 pt-5 pb-1">
           <div>
-            {title && <h3 className="font-semibold text-[var(--color-text)]">{title}</h3>}
+            {title && <h3 className="text-[17px] font-semibold text-[var(--color-text)]">{title}</h3>}
             {subtitle && <p className="text-sm text-muted mt-0.5">{subtitle}</p>}
           </div>
           {action}
         </div>
       )}
-      <div className="p-5">{children}</div>
+      <div className={title || action ? "px-6 pb-6 pt-4" : "p-6"}>{children}</div>
     </div>
   );
 }
@@ -55,8 +55,8 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 export function Select({ label, children, className = '', ...props }: SelectProps) {
   return (
     <div className="flex flex-col gap-1">
-      {label && <label className="text-xs font-medium text-muted uppercase tracking-wide">{label}</label>}
-      <select className={`input-base rounded-lg px-3 py-2 text-sm ${className}`} {...props}>
+      {label && <label className="text-xs font-semibold text-muted">{label}</label>}
+      <select className={`input-base rounded-xl h-10 px-3 text-sm ${className}`} {...props}>
         {children}
       </select>
     </div>
@@ -70,8 +70,8 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export function Input({ label, className = '', ...props }: InputProps) {
   return (
     <div className="flex flex-col gap-1">
-      {label && <label className="text-xs font-medium text-muted uppercase tracking-wide">{label}</label>}
-      <input className={`input-base rounded-lg px-3 py-2 text-sm ${className}`} {...props} />
+      {label && <label className="text-xs font-semibold text-muted">{label}</label>}
+      <input className={`input-base rounded-xl h-10 px-3 text-sm ${className}`} {...props} />
     </div>
   );
 }
@@ -79,12 +79,12 @@ export function Input({ label, className = '', ...props }: InputProps) {
 export function Badge({ children, variant = 'default' }: { children: ReactNode; variant?: 'default' | 'primary' | 'warning' | 'danger' }) {
   const variants = {
     default: 'surface-2 text-muted',
-    primary: 'text-primary',
-    warning: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    danger: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    primary: 'text-primary bg-[var(--color-primary-light)]',
+    warning: 'bg-[var(--color-warn-bg)] text-[var(--color-warn)]',
+    danger: 'bg-[var(--color-danger-bg)] text-[var(--color-danger)]',
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${variants[variant]}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${variants[variant]}`}>
       {children}
     </span>
   );
@@ -93,10 +93,10 @@ export function Badge({ children, variant = 'default' }: { children: ReactNode; 
 export function EmptyState({ icon, title, description, action }: { icon: ReactNode; title: string; description: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-      <div className="w-16 h-16 rounded-2xl surface-2 flex items-center justify-center mb-4 text-muted">
+      <div className="w-16 h-16 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center mb-4 text-primary">
         {icon}
       </div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <h3 className="text-xl font-semibold mb-2">{title}</h3>
       <p className="text-muted text-sm max-w-md mb-6">{description}</p>
       {action}
     </div>
@@ -105,9 +105,9 @@ export function EmptyState({ icon, title, description, action }: { icon: ReactNo
 
 export function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="surface rounded-xl p-4">
-      <p className="text-xs font-medium text-muted uppercase tracking-wide">{label}</p>
-      <p className="text-2xl font-bold mt-1 text-[var(--color-text)]">{value}</p>
+    <div className="surface rounded-3xl p-5">
+      <p className="text-xs font-bold text-muted uppercase tracking-[0.1em]">{label}</p>
+      <p className="font-display text-[26px] font-semibold mt-1.5 leading-tight text-[var(--color-text)]">{value}</p>
       {sub && <p className="text-xs text-muted mt-1">{sub}</p>}
     </div>
   );
@@ -116,7 +116,7 @@ export function StatCard({ label, value, sub }: { label: string; value: string |
 export function ProgressBar({ value, max, color }: { value: number; max: number; color?: string }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   return (
-    <div className="h-1.5 rounded-full surface-2 overflow-hidden">
+    <div className="h-2 rounded-full surface-2 overflow-hidden">
       <div className="h-full rounded-full transition-all duration-300" style={{ width: `${pct}%`, backgroundColor: color || 'var(--color-primary)' }} />
     </div>
   );

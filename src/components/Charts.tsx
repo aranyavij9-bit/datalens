@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { formatNumber, percentile } from '@/lib/stats';
 import type { ThemeColors } from '@/lib/types';
 
@@ -17,6 +17,26 @@ interface BarChartProps extends ChartProps {
   onSelect?: (label: string) => void;
 }
 
+
+/**
+ * Round an axis out to tidy numbers (1, 2, 2.5, 5 × 10ⁿ). Returns the bounds and
+ * the number of intervals, which lands between 4 and 6 depending on the data.
+ */
+function niceScale(lo: number, hi: number): { min: number; max: number; count: number } {
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) return { min: 0, max: 1, count: 5 };
+  if (hi <= lo) hi = lo + 1;
+  const raw = (hi - lo) / 5;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  for (const m of [1, 2, 2.5, 5, 10, 20]) {
+    const step = m * mag;
+    if (step * 6 < hi - lo) continue;
+    const min = Math.floor(lo / step) * step;
+    const count = Math.max(1, Math.ceil((hi - min) / step - 1e-9));
+    if (count <= 6) return { min, max: min + step * count, count };
+  }
+  return { min: lo, max: hi, count: 5 };
+}
+
 export function BarChart({ data, colors, yLabel, xLabel, onSelect }: BarChartProps) {
   const [hovered, setHovered] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
@@ -25,13 +45,11 @@ export function BarChart({ data, colors, yLabel, xLabel, onSelect }: BarChartPro
   const padding = { top: 20, right: 20, bottom: 60, left: 70 };
   const chartW = w - padding.left - padding.right;
   const chartH = h - padding.top - padding.bottom;
-  const maxVal = Math.max(...data.map((d) => d.value), 0.01);
-  const minVal = Math.min(0, ...data.map((d) => d.value));
+  const { min: minVal, max: maxVal, count: yTicks } = niceScale(Math.min(0, ...data.map((d) => d.value)), Math.max(...data.map((d) => d.value), 0.01));
   const range = maxVal - minVal || 1;
   const barW = data.length > 0 ? (chartW / data.length) * 0.7 : 0;
   const gap = data.length > 0 ? (chartW / data.length) * 0.3 : 0;
 
-  const yTicks = 5;
   const tickVals = Array.from({ length: yTicks + 1 }, (_, i) => minVal + (range * i) / yTicks);
 
   return (
@@ -111,8 +129,7 @@ export function LineChart({ data, colors, yLabel, xLabel, showArea = false, show
   const chartW = w - padding.left - padding.right;
   const chartH = h - padding.top - padding.bottom;
   const values = data.map((d) => d.value);
-  const maxVal = Math.max(...values, 0.01);
-  const minVal = Math.min(...values, 0);
+  const { min: minVal, max: maxVal, count: yTicks } = niceScale(Math.min(...values, 0), Math.max(...values, 0.01));
   const range = maxVal - minVal || 1;
 
   const xStep = data.length > 1 ? chartW / (data.length - 1) : 0;
@@ -127,7 +144,6 @@ export function LineChart({ data, colors, yLabel, xLabel, showArea = false, show
     ? `${linePath} L ${points[points.length - 1].x} ${padding.top + chartH} L ${points[0].x} ${padding.top + chartH} Z`
     : '';
 
-  const yTicks = 5;
   const tickVals = Array.from({ length: yTicks + 1 }, (_, i) => minVal + (range * i) / yTicks);
 
   // Moving average
@@ -226,19 +242,17 @@ export function ScatterChart({ data, colors, xLabel, yLabel, trendLine }: Scatte
   const chartH = h - padding.top - padding.bottom;
   const xs = data.map((d) => d.x);
   const ys = data.map((d) => d.y);
-  const maxX = Math.max(...xs, 0.01);
-  const minX = Math.min(...xs, 0);
-  const maxY = Math.max(...ys, 0.01);
-  const minY = Math.min(...ys, 0);
+  // Fit the axes to the data rather than forcing zero, so the point cloud fills the chart
+  const { min: minX, max: maxX, count: xTicks } = niceScale(Math.min(...xs), Math.max(...xs));
+  const { min: minY, max: maxY, count: yTicks } = niceScale(Math.min(...ys), Math.max(...ys));
   const rangeX = maxX - minX || 1;
   const rangeY = maxY - minY || 1;
 
   const toX = (v: number) => padding.left + ((v - minX) / rangeX) * chartW;
   const toY = (v: number) => padding.top + chartH - ((v - minY) / rangeY) * chartH;
 
-  const yTicks = 5;
   const tickValsY = Array.from({ length: yTicks + 1 }, (_, i) => minY + (rangeY * i) / yTicks);
-  const tickValsX = Array.from({ length: yTicks + 1 }, (_, i) => minX + (rangeX * i) / yTicks);
+  const tickValsX = Array.from({ length: xTicks + 1 }, (_, i) => minX + (rangeX * i) / xTicks);
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto" role="img">
@@ -312,7 +326,10 @@ export function Histogram({ values, colors, bins = 15, xLabel }: HistogramProps)
     if (idx >= bins) idx = bins - 1;
     counts[idx]++;
   }
-  const maxCount = Math.max(...counts, 1);
+  // Counts are whole numbers, so keep the axis step at 1 or more
+  const countStep = Math.max(1, Math.ceil(Math.max(...counts, 1) / 5));
+  const countTicks = Math.ceil(Math.max(...counts, 1) / countStep);
+  const maxCount = countStep * countTicks;
 
   const w = 800;
   const h = 400;
@@ -323,12 +340,12 @@ export function Histogram({ values, colors, bins = 15, xLabel }: HistogramProps)
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto" role="img">
-      {Array.from({ length: 6 }, (_, i) => {
-        const y = padding.top + chartH - (i / 5) * chartH;
+      {Array.from({ length: countTicks + 1 }, (_, i) => {
+        const y = padding.top + chartH - (i / countTicks) * chartH;
         return (
           <g key={i}>
             <line x1={padding.left} y1={y} x2={w - padding.right} y2={y} stroke={colors.border} strokeWidth="0.5" />
-            <text x={padding.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill={colors.textMuted}>{Math.round((maxCount * i) / 5)}</text>
+            <text x={padding.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill={colors.textMuted}>{countStep * i}</text>
           </g>
         );
       })}
@@ -446,7 +463,7 @@ export function PieChart({ data, colors, onSelect }: PieChartProps) {
         {data.map((d, i) => (
           <div
             key={i}
-            className={`flex items-center justify-between px-3 py-1.5 rounded-lg cursor-pointer transition-all ${hovered === i ? 'surface-2' : ''} ${hidden.has(i) ? 'opacity-40' : ''}`}
+            className={`flex items-center justify-between px-3 py-1.5 rounded-xl cursor-pointer transition-all ${hovered === i ? 'surface-2' : ''} ${hidden.has(i) ? 'opacity-40' : ''}`}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
             onClick={() => {
@@ -473,7 +490,7 @@ interface BoxPlotProps extends ChartProps {
   highlightIndices?: number[];
 }
 
-export function BoxPlot({ data, colors, yLabel, highlightIndices }: BoxPlotProps) {
+export function BoxPlot({ data, colors, yLabel }: BoxPlotProps) {
   const w = 800;
   const h = 400;
   const padding = { top: 20, right: 20, bottom: 60, left: 70 };
@@ -482,8 +499,7 @@ export function BoxPlot({ data, colors, yLabel, highlightIndices }: BoxPlotProps
 
   const allVals = data.flatMap((d) => d.values);
   if (allVals.length === 0) return <p className="text-muted text-center py-8">No values to display</p>;
-  const maxVal = Math.max(...allVals);
-  const minVal = Math.min(...allVals);
+  const { min: minVal, max: maxVal, count: yTicks } = niceScale(Math.min(...allVals), Math.max(...allVals));
   const range = maxVal - minVal || 1;
 
   const toY = (v: number) => padding.top + chartH - ((v - minVal) / range) * chartH;
@@ -491,8 +507,8 @@ export function BoxPlot({ data, colors, yLabel, highlightIndices }: BoxPlotProps
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto" role="img">
-      {Array.from({ length: 6 }, (_, i) => {
-        const v = minVal + (range * i) / 5;
+      {Array.from({ length: yTicks + 1 }, (_, i) => {
+        const v = minVal + (range * i) / yTicks;
         const y = toY(v);
         return (
           <g key={i}>

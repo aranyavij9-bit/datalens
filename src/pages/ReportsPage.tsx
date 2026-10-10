@@ -8,12 +8,12 @@ import {
   computeNumericStats, getNumericValues, getNumericColumnNames,
   getCategoricalColumnNames, computeCategoricalStats,
   formatNumber, correlation, groupAndAggregate, trendDirection,
-  detectOutliersIQR,
+  detectOutliersIQR, getPairedValues,
 } from '@/lib/stats';
 import { useState } from 'react';
 
 export function ReportsPage() {
-  const { workingDataset, insights, scenario, charts } = useApp();
+  const { workingDataset, insights, scenario } = useApp();
   const colors = useColors();
   const [copied, setCopied] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
@@ -40,8 +40,7 @@ export function ReportsPage() {
     const correlations: { a: string; b: string; r: number }[] = [];
     for (let i = 0; i < numericCols.length; i++) {
       for (let j = i + 1; j < numericCols.length; j++) {
-        const x = getNumericValues(ds.rows, numericCols[i]);
-        const y = getNumericValues(ds.rows, numericCols[j]);
+        const { x, y } = getPairedValues(ds.rows, numericCols[i], numericCols[j]);
         correlations.push({ a: numericCols[i], b: numericCols[j], r: correlation(x, y) });
       }
     }
@@ -117,7 +116,7 @@ export function ReportsPage() {
               {workingDataset.name} · {workingDataset.rows.length} rows · {workingDataset.columns.length} columns
             </p>
             <p className="text-xs mt-2" style={{ color: colors.textMuted }}>
-              Generated: {new Date().toLocaleDateString(undefined, { dateStyle: 'full', timeStyle: 'short' })}
+              Generated: {new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' })}
             </p>
             {workingDataset.isDemo && <p className="text-xs mt-1" style={{ color: colors.textMuted }}>(Demo Dataset)</p>}
           </div>
@@ -195,7 +194,7 @@ export function ReportsPage() {
               {reportData.correlations.map(({ a, b, r }, i) => (
                 <div key={i} className="flex items-center justify-between text-sm">
                   <span style={{ color: colors.text }}>{a} ↔ {b}</span>
-                  <span className="font-bold" style={{ color: r > 0 ? colors.primary : '#c2410c' }}>
+                  <span className="font-bold" style={{ color: r > 0 ? colors.primary : colors.accent }}>
                     {r >= 0 ? '+' : ''}{r.toFixed(3)}
                   </span>
                 </div>
@@ -211,7 +210,7 @@ export function ReportsPage() {
               {reportData.outliers.map((o, i) => (
                 <div key={i} className="flex items-center justify-between text-sm">
                   <span style={{ color: colors.text }}>{o.col}</span>
-                  <span style={{ color: '#c2410c' }}>{o.count} potential outliers (IQR method)</span>
+                  <span style={{ color: colors.accent }}>{o.count} potential outliers (IQR method)</span>
                 </div>
               ))}
             </div>

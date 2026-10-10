@@ -4,6 +4,7 @@ import type {
   CategoricalStats,
   DateStats,
   ColumnType,
+  Aggregation,
 } from './types';
 
 export function detectType(values: (string | number | null)[]): ColumnType {
@@ -264,6 +265,28 @@ export function getColumnValues(
   return rows.map((r) => r[col] ?? null);
 }
 
+/**
+ * Numeric values from two columns, keeping only rows where both are present
+ * so each x stays paired with the y from the same row.
+ */
+export function getPairedValues(
+  rows: Record<string, string | number | null>[],
+  colX: string,
+  colY: string
+): { x: number[]; y: number[] } {
+  const x: number[] = [];
+  const y: number[] = [];
+  for (const r of rows) {
+    const a = parseNumeric(r[colX] ?? null);
+    const b = parseNumeric(r[colY] ?? null);
+    if (a !== null && b !== null) {
+      x.push(a);
+      y.push(b);
+    }
+  }
+  return { x, y };
+}
+
 export function getNumericValues(
   rows: Record<string, string | number | null>[],
   col: string
@@ -316,4 +339,9 @@ export function groupAndAggregate(
   return Array.from(groups.entries())
     .map(([label, groupRows]) => ({ label, value: aggregate(groupRows, yCol, agg) }))
     .sort((a, b) => b.value - a.value);
+}
+
+/** Reader-friendly label for an aggregation, e.g. "Average". */
+export function aggregationLabel(agg: Aggregation): string {
+  return { sum: 'Total', avg: 'Average', count: 'Count of', min: 'Lowest', max: 'Highest' }[agg];
 }

@@ -1,6 +1,5 @@
 import {
-  GraduationCap, Mail, School, Telescope, BookOpen, Code,
-  TrendingUp, BarChart3, GitCompareArrows, FlaskConical, Database,
+  GraduationCap, Mail, School, Telescope, Code, TrendingUp, BarChart3, GitCompareArrows, FlaskConical, Database,
 } from 'lucide-react';
 import { useColors } from '@/context/useColors';
 import { PageHeader } from '@/components/PageHeader';
@@ -10,18 +9,18 @@ export function StudentPage() {
   const colors = useColors();
 
   const exploredTopics = [
-    { icon: Database, label: 'Data Organisation', desc: 'Structuring raw data into typed columns and working copies' },
+    { icon: Database, label: 'Data Organization', desc: 'Structuring raw data into typed columns and working copies' },
     { icon: TrendingUp, label: 'Statistical Analysis', desc: 'Mean, median, standard deviation, and percentile calculations' },
-    { icon: BarChart3, label: 'Data Visualisation', desc: 'Building interactive charts that answer analytical questions' },
+    { icon: BarChart3, label: 'Data Visualization', desc: 'Building interactive charts that answer analytical questions' },
     { icon: GitCompareArrows, label: 'Correlation', desc: 'Measuring linear relationships between numeric variables' },
     { icon: TrendingUp, label: 'Trend Analysis', desc: 'Detecting directional patterns and moving averages' },
-    { icon: FlaskConical, label: 'Scenario Modelling', desc: 'What-if analysis using observed linear relationships' },
+    { icon: FlaskConical, label: 'Scenario Modeling', desc: 'What-if analysis using observed linear relationships' },
     { icon: Code, label: 'Interactive Software Design', desc: 'Building a responsive, browser-based analytics workspace' },
   ];
 
   return (
     <div className="px-4 lg:px-8 py-6 max-w-4xl mx-auto animate-fade-in">
-      <PageHeader title="Student" subtitle="About the creator of DataLens" icon={<GraduationCap size={20} />} />
+      <PageHeader title="About Aranya" subtitle="The person behind DataLens" icon={<GraduationCap size={20} />} />
 
       <div className="space-y-6">
         {/* Profile */}
@@ -73,7 +72,7 @@ export function StudentPage() {
             {exploredTopics.map((topic) => {
               const Icon = topic.icon;
               return (
-                <div key={topic.label} className="surface-2 rounded-lg p-4">
+                <div key={topic.label} className="surface-2 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-1.5">
                     <Icon size={18} style={{ color: colors.primary }} />
                     <h4 className="font-semibold text-sm" style={{ color: colors.text }}>{topic.label}</h4>
@@ -91,12 +90,12 @@ export function StudentPage() {
             <p>
               I think data science is about more than making charts. It is about asking questions, examining evidence,
               identifying relationships, and making informed decisions. DataLens is my attempt to build a tool that
-              reflects that process — from importing raw data to modelling scenarios and saving insights.
+              reflects that process — from importing raw data to modeling scenarios and saving insights.
             </p>
             <p style={{ color: colors.textMuted }}>
               I wanted to understand what happens behind the scenes when a chart is generated, how correlation is
               calculated, and how a simple linear model can be used to explore "what if" questions. Building this
-              project taught me that every visualisation should answer a question, and every calculation should be
+              project taught me that every visualization should answer a question, and every calculation should be
               traceable to the data it came from.
             </p>
           </div>

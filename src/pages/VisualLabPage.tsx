@@ -1,14 +1,12 @@
-import { useState, useMemo } from 'react';
-import { BarChart3, Lightbulb, Plus, Trash2, TrendingUp } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { BarChart3, Lightbulb, Plus, Trash2 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useColors } from '@/context/useColors';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Card, Select, EmptyState, Badge } from '@/components/ui';
 import { BarChart, LineChart, ScatterChart, Histogram, PieChart, BoxPlot } from '@/components/Charts';
 import {
-  groupAndAggregate, getNumericValues, getNumericColumnNames,
-  getCategoricalColumnNames, getDateColumnNames, formatNumber,
-  parseNumeric,
+  groupAndAggregate, getNumericValues, getNumericColumnNames, getCategoricalColumnNames, getDateColumnNames, parseNumeric, aggregationLabel,
 } from '@/lib/stats';
 import type { ChartType, Aggregation, ChartConfig } from '@/lib/types';
 
@@ -29,11 +27,12 @@ export function VisualLabPage() {
   const [selectedPoint, setSelectedPoint] = useState<string | null>(null);
 
   // Auto-set defaults when dataset changes
-  useMemo(() => {
-    if (workingDataset && numericCols.length > 0 && !yCol) setYCol(numericCols[0]);
-    if (workingDataset && allCols.length > 0 && !xCol) {
-      setXCol(catCols[0] || dateCols[0] || allCols[0]);
-    }
+  useEffect(() => {
+    if (!workingDataset) return;
+    if (!numericCols.includes(yCol)) setYCol(numericCols[0] ?? '');
+    if (!allCols.includes(xCol)) setXCol(catCols[0] || dateCols[0] || allCols[0] || '');
+    if (groupCol && !allCols.includes(groupCol)) setGroupCol('');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workingDataset]);
 
   const chartData = useMemo(() => {
@@ -75,7 +74,7 @@ export function VisualLabPage() {
     if (chartType === 'line' || chartType === 'area') {
       // For line/area, if x is a date column, sort by date
       const isDateX = ds.columns.find(c => c.name === xCol)?.type === 'date';
-      let data = groupAndAggregate(ds.rows, xCol, yCol, agg);
+      const data = groupAndAggregate(ds.rows, xCol, yCol, agg);
       if (isDateX) {
         data.sort((a, b) => a.label.localeCompare(b.label));
       }
@@ -105,7 +104,7 @@ export function VisualLabPage() {
         <EmptyState
           icon={<BarChart3 size={28} />}
           title="No dataset loaded"
-          description="Load a demo dataset or import a CSV to start creating visualisations."
+          description="Load a demo dataset or import a CSV to start creating visualizations."
           action={<Button variant="primary" onClick={() => window.location.hash = 'data'}>Go to Data</Button>}
         />
       </div>
@@ -145,10 +144,10 @@ export function VisualLabPage() {
                 <button
                   key={ct.id}
                   onClick={() => setChartType(ct.id)}
-                  className="px-2 py-2 rounded-lg text-xs font-medium transition-all"
+                  className="px-3 h-9 rounded-full text-xs font-semibold transition-all"
                   style={{
                     backgroundColor: chartType === ct.id ? colors.primary : colors.surface2,
-                    color: chartType === ct.id ? colors.surface : colors.text,
+                    color: chartType === ct.id ? '#ffffff' : colors.text,
                   }}
                 >
                   {ct.label}
@@ -215,7 +214,7 @@ export function VisualLabPage() {
                   ? `Distribution of ${yCol}`
                   : chartType === 'scatter'
                   ? `${yCol} vs ${xCol}`
-                  : `${agg} of ${yCol} by ${xCol}`}
+                  : `${aggregationLabel(agg)} ${yCol} by ${xCol}`}
               </h3>
               <p className="text-xs text-muted mt-0.5">
                 {chartType === 'histogram'
@@ -226,7 +225,7 @@ export function VisualLabPage() {
 
             {chartData.length === 0 ? (
               <div className="py-12 text-center">
-                <p className="text-muted text-sm">Select variables to create your first visualisation.</p>
+                <p className="text-muted text-sm">Select variables to create your first visualization.</p>
               </div>
             ) : (
               <div className="w-full">
@@ -246,7 +245,7 @@ export function VisualLabPage() {
             <Card title="Saved Charts" subtitle={`${charts.length} saved`}>
               <div className="space-y-2">
                 {charts.map((c) => (
-                  <div key={c.id} className="flex items-center justify-between p-2 rounded-lg surface-2">
+                  <div key={c.id} className="flex items-center justify-between p-2 rounded-xl surface-2">
                     <div className="flex items-center gap-2">
                       <BarChart3 size={14} style={{ color: colors.primary }} />
                       <span className="text-sm" style={{ color: colors.text }}>

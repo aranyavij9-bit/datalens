@@ -1,15 +1,12 @@
-import { useState, useMemo } from 'react';
-import { GitCompareArrows, Lightbulb, TrendingUp, TrendingDown, Minus, BarChart2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { GitCompareArrows, Lightbulb } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useColors } from '@/context/useColors';
 import { PageHeader } from '@/components/PageHeader';
-import { Button, Card, Select, EmptyState, StatCard, Badge } from '@/components/ui';
+import { Button, Card, Select, EmptyState } from '@/components/ui';
 import { ScatterChart } from '@/components/Charts';
 import {
-  correlation, correlationLabel, linearRegression,
-  getNumericValues, getNumericColumnNames, formatNumber,
-  movingAverage, trendDirection, percentChange, groupAndAggregate,
-  getDateColumnNames, parseNumeric,
+  correlation, correlationLabel, linearRegression, getNumericValues, getNumericColumnNames, formatNumber, getPairedValues,
 } from '@/lib/stats';
 import type { Dataset } from '@/lib/types';
 
@@ -20,17 +17,27 @@ export function RelationshipsPage() {
   const [colA, setColA] = useState('');
   const [colB, setColB] = useState('');
 
-  useMemo(() => {
-    if (workingDataset && numericCols.length >= 2) {
-      if (!colA) setColA(numericCols[0]);
-      if (!colB) setColB(numericCols[1]);
+  useEffect(() => {
+    if (!workingDataset || numericCols.length < 2) return;
+    if (numericCols.includes(colA) && numericCols.includes(colB)) return;
+    // Open on the most strongly related pair so the first view is interesting
+    let best = [numericCols[0], numericCols[1]];
+    let bestR = -1;
+    for (let i = 0; i < numericCols.length; i++) {
+      for (let j = i + 1; j < numericCols.length; j++) {
+        const { x, y } = getPairedValues(workingDataset.rows, numericCols[i], numericCols[j]);
+        const r = Math.abs(correlation(x, y));
+        if (x.length >= 3 && r > bestR) { bestR = r; best = [numericCols[i], numericCols[j]]; }
+      }
     }
+    setColA(best[0]);
+    setColB(best[1]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workingDataset]);
 
   const result = useMemo(() => {
     if (!workingDataset || !colA || !colB || colA === colB) return null;
-    const x = getNumericValues(workingDataset.rows, colA);
-    const y = getNumericValues(workingDataset.rows, colB);
+    const { x, y } = getPairedValues(workingDataset.rows, colA, colB);
     const n = Math.min(x.length, y.length);
     if (n < 2) return null;
     const r = correlation(x, y);
@@ -126,13 +133,13 @@ export function RelationshipsPage() {
               <Card title="Interpretation">
                 <div className="space-y-3 text-sm" style={{ color: colors.text }}>
                   <p>The variables <strong>{colA}</strong> and <strong>{colB}</strong> show a {result.label.toLowerCase()} in this dataset (r = {result.r.toFixed(3)}).</p>
-                  <div className="p-3 rounded-lg" style={{ backgroundColor: colors.surface2 }}>
+                  <div className="p-3 rounded-xl" style={{ backgroundColor: colors.surface2 }}>
                     <p className="text-muted">
                       Correlation measures the strength and direction of a linear relationship.
                       A value of +1 means a perfect positive relationship, -1 a perfect negative relationship, and 0 no linear relationship.
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
+                  <div className="p-3 rounded-xl" style={{ backgroundColor: 'var(--color-warn-bg)', color: 'var(--color-warn)' }}>
                     <p className="font-medium">Important: Correlation does not imply causation.</p>
                     <p className="text-sm mt-1">These variables show a statistical relationship in this dataset, but this does not mean one causes the other.</p>
                   </div>

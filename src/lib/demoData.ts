@@ -27,10 +27,11 @@ function studentPerformance(): Dataset {
   for (let i = 1; i <= 80; i++) {
     const study = +(2 + rand() * 8).toFixed(1);
     const attendance = +(75 + rand() * 25).toFixed(0);
-    const assignment = +(40 + study * 5 + rand() * 15).toFixed(1);
+    const assignment = +Math.min(100, 45 + study * 5 + rand() * 10).toFixed(1);
     const sleep = +(4 + rand() * 6).toFixed(1);
     const extracurricular = +(rand() * 15).toFixed(1);
-    const exam = +(study * 6 + attendance * 0.3 + assignment * 0.2 + sleep * 2 + rand() * 10).toFixed(1);
+    // Scores are out of 100
+    const exam = +Math.min(100, 15 + study * 4.5 + attendance * 0.15 + assignment * 0.12 + sleep + rand() * 6).toFixed(1);
     data.push([`S${String(i).padStart(3, '0')}`, study, attendance, assignment, exam, sleep, extracurricular]);
   }
   // Inject some missing values
@@ -86,20 +87,21 @@ function retailSales(): Dataset {
 // ── Climate Trends Dataset ───────────────────────────────
 function climateTrends(): Dataset {
   const rand = seedRandom(17);
-  const headers = ['Date', 'Temperature', 'Rainfall', 'Humidity', 'Wind Speed'];
+  const headers = ['Date', 'City', 'Temperature (°F)', 'Rainfall (in)', 'Humidity (%)', 'Wind Speed (mph)'];
   const cities = ['Seattle', 'Phoenix', 'Chicago', 'Miami', 'Denver'];
   const data: (string | number)[][] = [];
-  const start = new Date('2024-01-01');
   for (let c = 0; c < cities.length; c++) {
     for (let m = 0; m < 12; m++) {
       const date = new Date(2024, m, 15);
       const baseTemp = 10 + 15 * Math.sin(((m - 3) / 12) * 2 * Math.PI);
-      const temp = +(baseTemp + (c * 2 - 4) + rand() * 4 - 2).toFixed(1);
-      const rainfall = +(rand() * 80 + (m >= 5 && m <= 8 ? 20 : 0)).toFixed(1);
+      const tempC = baseTemp + (c * 2 - 4) + rand() * 4 - 2;
+      const temp = +(tempC * 9 / 5 + 32).toFixed(1);
+      const rainfall = +((rand() * 80 + (m >= 5 && m <= 8 ? 20 : 0)) / 25.4).toFixed(2);
       const humidity = +(40 + rand() * 40).toFixed(0);
       const wind = +(5 + rand() * 25).toFixed(1);
       data.push([
         date.toISOString().slice(0, 10),
+        cities[c],
         temp,
         rainfall,
         humidity,
@@ -107,8 +109,8 @@ function climateTrends(): Dataset {
       ]);
     }
   }
-  data[8][3] = '';
-  data[25][2] = '';
+  data[8][4] = '';
+  data[25][3] = '';
   return buildDataset('Climate Trends', headers, makeRows(headers, data), true);
 }
 

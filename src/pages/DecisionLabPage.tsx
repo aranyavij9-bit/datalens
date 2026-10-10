@@ -1,13 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FlaskConical, Lightbulb, AlertCircle, ArrowRight, Sliders } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useColors } from '@/context/useColors';
 import { PageHeader } from '@/components/PageHeader';
-import { Button, Card, Select, EmptyState, StatCard, Badge, Input } from '@/components/ui';
+import { Button, Card, Select, EmptyState, Badge, Input } from '@/components/ui';
 import { BarChart } from '@/components/Charts';
 import {
-  getNumericValues, getNumericColumnNames, computeNumericStats,
-  linearRegression, formatNumber, parseNumeric,
+  getNumericValues, getNumericColumnNames, computeNumericStats, linearRegression, formatNumber, getPairedValues,
 } from '@/lib/stats';
 
 export function DecisionLabPage() {
@@ -22,17 +21,17 @@ export function DecisionLabPage() {
   const [saved, setSaved] = useState(false);
 
   // Auto-set defaults
-  useMemo(() => {
-    if (workingDataset && numericCols.length >= 2) {
-      if (!inputCol) {
-        setInputCol(numericCols[0]);
-        const vals = getNumericValues(workingDataset.rows, numericCols[0]);
-        const stats = computeNumericStats(vals);
-        setFromVal(Math.round(stats.mean * 10) / 10);
-        setToVal(Math.round(stats.mean * 10) / 10);
-      }
-      if (!outputCol) setOutputCol(numericCols[1]);
+  useEffect(() => {
+    if (!workingDataset || numericCols.length < 2) return;
+    if (!numericCols.includes(inputCol)) {
+      setInputCol(numericCols[0]);
+      const vals = getNumericValues(workingDataset.rows, numericCols[0]);
+      const stats = computeNumericStats(vals);
+      setFromVal(Math.round(stats.mean * 10) / 10);
+      setToVal(Math.round(stats.mean * 10) / 10);
     }
+    if (!numericCols.includes(outputCol)) setOutputCol(numericCols[1]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workingDataset]);
 
   // Update fromVal when inputCol changes
@@ -48,8 +47,7 @@ export function DecisionLabPage() {
 
   const scenarioResult = useMemo(() => {
     if (!workingDataset || !inputCol || !outputCol || inputCol === outputCol) return null;
-    const x = getNumericValues(workingDataset.rows, inputCol);
-    const y = getNumericValues(workingDataset.rows, outputCol);
+    const { x, y } = getPairedValues(workingDataset.rows, inputCol, outputCol);
     if (x.length < 3) return null;
 
     const stats = computeNumericStats(y);
@@ -97,7 +95,7 @@ export function DecisionLabPage() {
   if (!workingDataset) {
     return (
       <div className="px-4 lg:px-8 py-6 max-w-7xl mx-auto">
-        <PageHeader title="Decision Lab" subtitle="What-if scenario modelling" icon={<FlaskConical size={20} />} />
+        <PageHeader title="Decision Lab" subtitle="What-if scenario modeling" icon={<FlaskConical size={20} />} />
         <EmptyState
           icon={<FlaskConical size={28} />}
           title="No dataset loaded"
@@ -111,7 +109,7 @@ export function DecisionLabPage() {
   if (numericCols.length < 2) {
     return (
       <div className="px-4 lg:px-8 py-6 max-w-7xl mx-auto">
-        <PageHeader title="Decision Lab" subtitle="What-if scenario modelling" icon={<FlaskConical size={20} />} />
+        <PageHeader title="Decision Lab" subtitle="What-if scenario modeling" icon={<FlaskConical size={20} />} />
         <EmptyState
           icon={<FlaskConical size={28} />}
           title="Not enough numeric columns"
@@ -208,7 +206,7 @@ export function DecisionLabPage() {
           )}
 
           {saved && (
-            <div className="flex items-center gap-2 p-3 rounded-lg animate-fade-in" style={{ backgroundColor: '#f0fdf4', color: '#166534' }}>
+            <div className="flex items-center gap-2 p-3 rounded-xl animate-fade-in" style={{ backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)' }}>
               <span className="text-sm">Scenario saved to workspace.</span>
             </div>
           )}
@@ -229,7 +227,7 @@ export function DecisionLabPage() {
                   <div className="flex items-center justify-center">
                     <div className="text-center">
                       <ArrowRight size={28} className="mx-auto mb-1" style={{ color: colors.primary }} />
-                      <p className="text-2xl font-bold" style={{ color: scenarioResult.pctChange >= 0 ? colors.primary : '#c2410c' }}>
+                      <p className="text-2xl font-bold" style={{ color: scenarioResult.pctChange >= 0 ? colors.primary : colors.accent }}>
                         {scenarioResult.pctChange >= 0 ? '+' : ''}{scenarioResult.pctChange.toFixed(1)}%
                       </p>
                       <p className="text-xs text-muted">{scenarioResult.difference >= 0 ? '+' : ''}{formatNumber(scenarioResult.difference)}</p>
@@ -254,7 +252,7 @@ export function DecisionLabPage() {
               </Card>
 
               {/* Disclaimer */}
-              <div className="flex items-start gap-3 p-4 rounded-xl" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
+              <div className="flex items-start gap-3 p-4 rounded-xl" style={{ backgroundColor: 'var(--color-warn-bg)', color: 'var(--color-warn)' }}>
                 <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-sm">Scenario Estimate</p>

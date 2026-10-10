@@ -1,7 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
-  GitCompareArrows, Lightbulb, AlertTriangle, TrendingUp, TrendingDown, Minus,
-  ArrowRight, BarChart2, Telescope,
+  GitCompareArrows, Lightbulb, AlertTriangle, TrendingUp, TrendingDown, Minus, Telescope,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useColors } from '@/context/useColors';
@@ -9,10 +8,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { Button, Card, Select, EmptyState, StatCard, Badge } from '@/components/ui';
 import { BarChart, LineChart, Histogram, BoxPlot } from '@/components/Charts';
 import {
-  getNumericValues, getNumericColumnNames, getCategoricalColumnNames,
-  getDateColumnNames, formatNumber, parseNumeric, groupAndAggregate,
-  trendDirection, movingAverage, percentChange, detectOutliersIQR, detectOutliersZScore,
-  computeNumericStats, percentile,
+  getNumericValues, getNumericColumnNames, getCategoricalColumnNames, getDateColumnNames, formatNumber, groupAndAggregate, trendDirection, detectOutliersIQR, detectOutliersZScore, computeNumericStats, aggregationLabel,
 } from '@/lib/stats';
 import type { Aggregation, Dataset } from '@/lib/types';
 
@@ -36,7 +32,7 @@ export function AnalysisPage() {
         <EmptyState
           icon={<Telescope size={28} />}
           title="No dataset loaded"
-          description="Load a dataset to analyse trends, compare groups, and detect outliers."
+          description="Load a dataset to analyze trends, compare groups, and detect outliers."
           action={<Button variant="primary" onClick={() => window.location.hash = 'data'}>Go to Data</Button>}
         />
       </div>
@@ -47,13 +43,13 @@ export function AnalysisPage() {
     <div className="px-4 lg:px-8 py-6 max-w-7xl mx-auto animate-fade-in">
       <PageHeader title="Analysis" subtitle="Trends, comparisons, and outlier detection" icon={<Telescope size={20} />} />
 
-      <div className="flex gap-1 mb-6 surface rounded-xl p-1 overflow-x-auto">
+      <div className="flex gap-1 mb-6 surface rounded-full p-1 overflow-x-auto w-fit max-w-full">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-            style={{ backgroundColor: tab === t.id ? colors.primary : 'transparent', color: tab === t.id ? colors.surface : colors.textMuted }}
+            className="px-4 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap"
+            style={{ backgroundColor: tab === t.id ? colors.primary : 'transparent', color: tab === t.id ? '#ffffff' : colors.textMuted }}
           >
             {t.label}
           </button>
@@ -77,10 +73,11 @@ function TrendsTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType<t
   const [metric, setMetric] = useState('');
   const [timeCol, setTimeCol] = useState('');
 
-  useMemo(() => {
-    if (numericCols.length > 0 && !metric) setMetric(numericCols[0]);
-    if (dateCols.length > 0 && !timeCol) setTimeCol(dateCols[0]);
-    else if (catCols.length > 0 && !timeCol) setTimeCol(catCols[0]);
+  // Reset selections that don't exist in the current dataset
+  useEffect(() => {
+    if (!numericCols.includes(metric)) setMetric(numericCols[0] ?? '');
+    if (![...dateCols, ...catCols].includes(timeCol)) setTimeCol(dateCols[0] ?? catCols[0] ?? '');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataset]);
 
   const seriesData = useMemo(() => {
@@ -97,11 +94,6 @@ function TrendsTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType<t
     return trendDirection(seriesData.map(d => d.value));
   }, [seriesData]);
 
-  const maData = useMemo(() => {
-    if (seriesData.length < 2) return [];
-    const ma = movingAverage(seriesData.map(d => d.value), Math.max(3, Math.floor(seriesData.length / 8)));
-    return seriesData.map((d, i) => ({ label: d.label, value: ma[i] }));
-  }, [seriesData]);
 
   const peak = useMemo(() => {
     if (seriesData.length === 0) return null;
@@ -132,7 +124,7 @@ function TrendsTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType<t
           <Card title="Trend Analysis">
             <div className="flex items-center gap-2 mb-3">
               {trend.direction === 'upward' && <TrendingUp size={20} style={{ color: colors.primary }} />}
-              {trend.direction === 'downward' && <TrendingDown size={20} style={{ color: '#c2410c' }} />}
+              {trend.direction === 'downward' && <TrendingDown size={20} style={{ color: colors.accent }} />}
               {trend.direction === 'stable' && <Minus size={20} style={{ color: colors.textMuted }} />}
               <Badge variant="primary" >{trend.direction}</Badge>
             </div>
@@ -140,7 +132,7 @@ function TrendsTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType<t
             <div className="mt-3 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Change</span>
-                <span style={{ color: trend.change >= 0 ? colors.primary : '#c2410c' }}>
+                <span style={{ color: trend.change >= 0 ? colors.primary : colors.accent }}>
                   {trend.change >= 0 ? '+' : ''}{trend.change.toFixed(1)}%
                 </span>
               </div>
@@ -202,9 +194,10 @@ function ComparisonTab({ dataset, colors }: { dataset: Dataset; colors: ReturnTy
   const [groupCol, setGroupCol] = useState('');
   const [agg, setAgg] = useState<Aggregation>('avg');
 
-  useMemo(() => {
-    if (numericCols.length > 0 && !metric) setMetric(numericCols[0]);
-    if (catCols.length > 0 && !groupCol) setGroupCol(catCols[0]);
+  useEffect(() => {
+    if (!numericCols.includes(metric)) setMetric(numericCols[0] ?? '');
+    if (!catCols.includes(groupCol)) setGroupCol(catCols[0] ?? '');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataset]);
 
   const comparisonData = useMemo(() => {
@@ -282,7 +275,7 @@ function ComparisonTab({ dataset, colors }: { dataset: Dataset; colors: ReturnTy
       <div className="space-y-4">
         <Card>
           <div className="mb-3">
-            <h3 className="font-semibold text-sm" style={{ color: colors.text }}>{agg} of {metric} by {groupCol}</h3>
+            <h3 className="font-semibold text-sm" style={{ color: colors.text }}>{aggregationLabel(agg)} {metric} by {groupCol}</h3>
           </div>
           {comparisonData.length > 0 ? (
             <BarChart data={comparisonData.map(d => ({ label: d.label, value: d.value }))} colors={colors} yLabel={metric} xLabel={groupCol} />
@@ -310,8 +303,9 @@ function OutliersTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType
   const [col, setCol] = useState('');
   const [method, setMethod] = useState<'iqr' | 'zscore'>('iqr');
 
-  useMemo(() => {
-    if (numericCols.length > 0 && !col) setCol(numericCols[0]);
+  useEffect(() => {
+    if (!numericCols.includes(col)) setCol(numericCols[0] ?? '');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataset]);
 
   const result = useMemo(() => {
@@ -364,7 +358,7 @@ function OutliersTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType
           <Card title="Results">
             <div className="space-y-3">
               <div className="text-center py-2">
-                <p className="text-3xl font-bold" style={{ color: result.outliers.length > 0 ? '#c2410c' : colors.primary }}>
+                <p className="text-3xl font-bold" style={{ color: result.outliers.length > 0 ? colors.accent : colors.primary }}>
                   {result.outliers.length}
                 </p>
                 <p className="text-sm text-muted">potential outliers</p>
@@ -383,11 +377,11 @@ function OutliersTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType
                   <>
                     <div className="flex justify-between">
                       <span className="text-muted">Lowest outlier</span>
-                      <span style={{ color: '#c2410c' }}>{formatNumber(Math.min(...result.outliers.map(o => o.value)))}</span>
+                      <span style={{ color: colors.accent }}>{formatNumber(Math.min(...result.outliers.map(o => o.value)))}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted">Highest outlier</span>
-                      <span style={{ color: '#c2410c' }}>{formatNumber(Math.max(...result.outliers.map(o => o.value)))}</span>
+                      <span style={{ color: colors.accent }}>{formatNumber(Math.max(...result.outliers.map(o => o.value)))}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted">Affected rows</span>
@@ -439,7 +433,7 @@ function OutliersTab({ dataset, colors }: { dataset: Dataset; colors: ReturnType
                       {result.outliers.slice(0, 50).map((o, i) => (
                         <tr key={i} className="border-b" style={{ borderColor: colors.border }}>
                           <td className="py-1.5 px-2 text-muted">{o.index + 1}</td>
-                          <td className="py-1.5 px-2" style={{ color: '#c2410c' }}>{formatNumber(o.value)}</td>
+                          <td className="py-1.5 px-2" style={{ color: colors.accent }}>{formatNumber(o.value)}</td>
                         </tr>
                       ))}
                     </tbody>

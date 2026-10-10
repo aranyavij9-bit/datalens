@@ -1,10 +1,9 @@
 import {
-  Info, Upload, Database, BarChart3, GitCompareArrows,
-  FlaskConical, ShieldCheck, AlertCircle, Telescope, Workflow,
+  Info, Upload, Database, BarChart3, GitCompareArrows, FlaskConical, ShieldCheck, AlertCircle, Telescope, Workflow,
 } from 'lucide-react';
 import { useColors } from '@/context/useColors';
 import { PageHeader } from '@/components/PageHeader';
-import { Card, Badge } from '@/components/ui';
+import { Card } from '@/components/ui';
 
 export function AboutPage() {
   const colors = useColors();
@@ -13,8 +12,8 @@ export function AboutPage() {
     { icon: Upload, label: 'Import', desc: 'Load a CSV or pick a demo dataset' },
     { icon: Database, label: 'Clean', desc: 'Fix types, handle missing values, remove duplicates' },
     { icon: Database, label: 'Explore', desc: 'Search, filter, sort, and profile the data' },
-    { icon: BarChart3, label: 'Visualise', desc: 'Create interactive charts with live aggregation' },
-    { icon: GitCompareArrows, label: 'Analyse', desc: 'Correlations, trends, comparisons, outliers' },
+    { icon: BarChart3, label: 'Visualize', desc: 'Create interactive charts with live aggregation' },
+    { icon: GitCompareArrows, label: 'Analyze', desc: 'Correlations, trends, comparisons, outliers' },
     { icon: FlaskConical, label: 'Decide', desc: 'Model what-if scenarios and save insights' },
   ];
 
@@ -22,17 +21,17 @@ export function AboutPage() {
     'Data structures — typed columns, working copies, and dataset metadata',
     'Statistical measures — mean, median, standard deviation, quartiles, IQR',
     'Filtering and aggregation — multi-column filters and group-by operations',
-    'Data visualisation — seven chart types with interactive tooltips and selection',
+    'Data visualization — seven chart types with interactive tooltips and selection',
     'Correlation — Pearson correlation coefficient with linear regression',
     'Outlier detection — IQR method and Z-score threshold',
     'Trend analysis — directional detection with moving averages',
-    'Scenario analysis — linear regression-based what-if modelling',
+    'Scenario analysis — linear regression-based what-if modeling',
     'Client-side persistence — LocalStorage for datasets, insights, and workspace',
   ];
 
   const limitations = [
     'Statistical methods are simplified and educational, not professional-grade.',
-    'Scenario modelling uses simple linear regression and does not account for confounding variables.',
+    'Scenario modeling uses simple linear regression and does not account for confounding variables.',
     'Correlation does not imply causation — relationships in the data are statistical, not causal.',
     'Large datasets (over ~50,000 rows) may slow down browser-based processing.',
     'CSV parsing is basic and may not handle all edge cases (quoted fields with newlines, encoding issues).',
@@ -40,7 +39,7 @@ export function AboutPage() {
 
   return (
     <div className="px-4 lg:px-8 py-6 max-w-4xl mx-auto animate-fade-in">
-      <PageHeader title="About DataLens" subtitle="Interactive Data Analytics & Decision Lab" icon={<Info size={20} />} />
+      <PageHeader title="How It Works" subtitle="The ideas and math behind DataLens" icon={<Info size={20} />} />
 
       <div className="space-y-6">
         {/* Why */}
@@ -110,16 +109,16 @@ export function AboutPage() {
           <div className="space-y-2">
             {limitations.map((l, i) => (
               <div key={i} className="flex items-start gap-2 text-sm">
-                <AlertCircle size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#f59e0b' }} />
+                <AlertCircle size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--color-amber)' }} />
                 <span style={{ color: colors.text }}>{l}</span>
               </div>
             ))}
           </div>
-          <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: colors.surface2 }}>
+          <div className="mt-4 p-3 rounded-xl" style={{ backgroundColor: colors.surface2 }}>
             <p className="text-sm" style={{ color: colors.textMuted }}>
               DataLens is designed as an educational exploration platform. Its statistical analysis and scenario
-              modelling methods are simplified and should not be treated as professional forecasting or scientific
-              modelling.
+              modeling methods are simplified and should not be treated as professional forecasting or scientific
+              modeling.
             </p>
           </div>
         </Card>

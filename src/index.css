@@ -3,27 +3,45 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #f8f7f4;
+  --color-bg: #FBF8F5;
   --color-surface: #ffffff;
-  --color-surface2: #f1efea;
-  --color-border: #e2ddd4;
-  --color-text: #1a1a1a;
-  --color-text-muted: #6b6760;
-  --color-primary: #0d7c66;
-  --color-primary-hover: #0a6553;
-  --color-primary-light: #d1ece4;
+  --color-surface2: #F3F0EF;
+  --color-border: #E7E4EA;
+  --color-text: #1F2850;
+  --color-text-muted: #7A82A6;
+  --color-primary: #4F8CF7;
+  --color-primary-hover: #3A72DE;
+  --color-primary-light: #EEF5FF;
+  --color-accent: #F2709F;
+  --color-success: #1E8466;
+  --color-success-bg: #EDFAF5;
+  --color-warn: #A15622;
+  --color-warn-bg: #FFF6EC;
+  --color-amber: #F6A35C;
+  --color-danger: #CC3A63;
+  --color-danger-bg: #FFF1F4;
+  --shadow-soft: 0 1px 2px rgba(31, 40, 80, 0.04), 0 10px 28px -14px rgba(31, 40, 80, 0.12);
 }
 
 .dark {
-  --color-bg: #111110;
-  --color-surface: #1a1a18;
-  --color-surface2: #242420;
-  --color-border: #383834;
-  --color-text: #e8e6e1;
-  --color-text-muted: #9a968e;
-  --color-primary: #34d3a8;
-  --color-primary-hover: #2bb894;
-  --color-primary-light: #1a2e29;
+  --color-bg: #141A35;
+  --color-surface: #1F2850;
+  --color-surface2: #2B3460;
+  --color-border: #2B3460;
+  --color-text: #F3F0EF;
+  --color-text-muted: #A0A6C2;
+  --color-primary: #6DA2FA;
+  --color-primary-hover: #94BEFF;
+  --color-primary-light: #253F74;
+  --color-accent: #FF8FB8;
+  --color-success: #74D3B2;
+  --color-success-bg: rgba(40, 162, 125, 0.15);
+  --color-warn: #FAB877;
+  --color-warn-bg: rgba(246, 163, 92, 0.12);
+  --color-amber: #FAB877;
+  --color-danger: #FF97B3;
+  --color-danger-bg: rgba(232, 80, 122, 0.15);
+  --shadow-soft: none;
 }
 
 * {
@@ -33,15 +51,23 @@
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-feature-settings: 'tnum' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: 'SOFT' 100;
+  letter-spacing: -0.01em;
 }
 
 @layer components {
   .surface {
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-soft);
   }
   .surface-2 {
     background-color: var(--color-surface2);
@@ -60,7 +86,7 @@ body {
   }
   .btn-primary {
     background-color: var(--color-primary);
-    color: var(--color-surface);
+    color: #ffffff;
     transition: background-color 0.15s ease;
   }
   .btn-primary:hover {
@@ -74,6 +100,7 @@ body {
   }
   .input-base:focus {
     border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 15%, transparent);
     outline: none;
   }
 }
@@ -133,13 +160,6 @@ body {
   animation: slideIn 0.2s ease forwards;
 }
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-.animate-pulse-dot {
-  animation: pulse-dot 2s ease infinite;
-}
 
 /* Print styles */
 @media print {
